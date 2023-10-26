@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "625891440054",
+    "project_id": "ids1-2023-ismx",
+    "storage_bucket": "ids1-2023-ismx.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:625891440054:android:2ffa45c33b1fe5ebd47d17",
+        "android_client_info": {
+          "package_name": "com.example.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB86tpFduNAnapiyNcsN3Jrb_m_YMRqXso"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,10 +1,10 @@
-import 'dart:ffi';
-
+import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:date_time_picker/date_time_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import 'package:date_time_picker/date_time_picker.dart';
 import 'package:quickalert/quickalert.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 
 class AddRifa extends StatefulWidget {
   final String idDoc;
@@ -16,219 +16,266 @@ class AddRifa extends StatefulWidget {
 }
 
 class _AddRifaState extends State<AddRifa> {
+
   final String idDoc;
 
   CollectionReference rifas = FirebaseFirestore.instance.collection('rifas');
   CollectionReference boletos = FirebaseFirestore.instance.collection('boletos');
 
-  TextEditingController nombreController = TextEditingController();
-  TextEditingController descripcionController = TextEditingController();
-  TextEditingController numeroBoletosController = TextEditingController();
-  TextEditingController precioBoletoController = TextEditingController();
+  TextEditingController txtNameController = TextEditingController();
+  TextEditingController txtDescriptionController = TextEditingController();
+  TextEditingController txtNumberBoletosController = TextEditingController();
+  TextEditingController txtPrecioBoletosController = TextEditingController();
+  TextEditingController txtDateController = TextEditingController();
 
-  TextEditingController txtFechaInicioController =
-  TextEditingController(text: DateTime.now().toString());
-  TextEditingController txtFechaTerminoController =
-  TextEditingController(text: DateTime.now().toString());
+  TextEditingController fechaIController = TextEditingController(text: DateTime.now().toString());
+  TextEditingController fechaFController = TextEditingController(text: DateTime.now().toString());
 
-  DateTime? _startDate = DateTime.now();
-  DateTime? _endDate = DateTime.now();
+  DateTime? fechainicio = DateTime.now();
+  DateTime? fechafinal =  DateTime.now();
+
+  final ImagePicker _picker = ImagePicker();
+  firebase_storage.Reference? _storageReference;
+  File? _image;
+
+  final _form = GlobalKey<FormState>();
 
   _AddRifaState(this.idDoc) {
-    if (idDoc.isNotEmpty) {
-      rifas.doc(this.idDoc).get().then((value) {
-        nombreController.text = value['nombre'];
-        descripcionController.text = value['descripcion'];
-        numeroBoletosController.text = value['numeroBoletos'].toString();
-        precioBoletoController.text = value['precioBoleto'].toString();
-
-        _startDate = value['fechaInicio'].toDate();
-        _endDate = value['fechaFin'].toDate();
-
-        txtFechaInicioController.text = _startDate.toString();
-        txtFechaTerminoController.text = _endDate.toString();
+    if(idDoc.isNotEmpty){
+      rifas.doc(idDoc).get().then((value) {
+        txtNameController.text = value['nombre'];
+        txtDescriptionController.text = value ['descripcion'];
+        txtNumberBoletosController.text = value ['numeroBoletos'].toString();
+        txtPrecioBoletosController.text = value ['precioBoletos'].toString();
+        fechainicio= value['fechaInicio'].toDate();
+        fechafinal = value ['fechaFin'].toDate();
+        fechaIController.text = fechainicio.toString();
+        fechaFController.text = fechafinal.toString();
 
         setState(() {});
+      });
+
+    }
+  }
+/*
+  Future<void>crearBoletos(String rifaId, int cantidad) async{
+    for (int i = 0; i<cantidad; i++){
+
+      await FirebaseFirestore.instance.collection('boletos').add({'rifaId': i + 1, 'reservado':false });
+    }
+  }
+*/
+  Future<void> _getImageFromCamera() async {
+    XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+    if(image != null){
+      setState(() {
+        _image = File(image.path);
       });
     }
   }
 
 
-  final _form = GlobalKey<FormState>();
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+
       appBar: AppBar(
-        title: Text("Añadir Rifa"),
+        title: Text("Agregar una rifa"),
+
       ),
       body: Form(
         key: _form,
-        child: Padding(
-          padding: const EdgeInsets.all(30.0),
-          child: Column(
-            children: [
-              //Nombre
-              TextFormField(
-                controller: nombreController,
+        child: Column(
+
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+
+            Padding(padding: EdgeInsets.fromLTRB(20, 10, 20, 20),
+              child: TextFormField(
+                controller: txtNameController,
+                decoration: const InputDecoration(
+                    border: OutlineInputBorder(), hintText: "Nombre"),
                 validator: (value) {
                   if (value == "") {
-                    return "Campo obligatorio";
+                    return "Este campo es obligatorio";
                   }
+                  return null;
                 },
-                decoration: InputDecoration(
-                  //border: OutlineInputBorder(),
-                    labelText: "Nombre",
-                    hintText: "Ingrese el nombre de la rifa"),
               ),
 
-              //Campo para la descripcion
-              TextFormField(
-                controller: descripcionController,
+            ),
+            Padding(padding: EdgeInsets.fromLTRB(20, 10, 20, 20),
+              child: TextFormField(
+                controller: txtDescriptionController,
+                decoration: const InputDecoration(
+                    border: OutlineInputBorder(), hintText: "Descripción"),
                 validator: (value) {
                   if (value == "") {
-                    return "Campo obligatorio";
+                    return "Este campo es obligatorio";
                   }
+                  return null;
                 },
-                decoration: InputDecoration(
-                    labelText: "Descripcion",
-                    hintText: "Ingrese descripcion de la rifa"),
               ),
 
-              //Campo para el numero de boletos
-
-              TextFormField(
-                controller: numeroBoletosController,
-                validator: (value) {
-                  if (value == "") {
-                    return "Campo obligatorio";
-                  }
-                },
+            ),
+            Padding(padding: EdgeInsets.fromLTRB(20, 10, 20, 20),
+              child: TextFormField(
+                controller: txtNumberBoletosController,
                 keyboardType: TextInputType.number,
-                decoration: InputDecoration(
-                    labelText: "Número de boletos",
-                    hintText: "Ingrese el numero de boletos para la rifa"),
-              ),
-
-              TextFormField(
-                controller: precioBoletoController,
+                decoration: const InputDecoration(
+                    border: OutlineInputBorder(), hintText: "Numero de boletos"),
                 validator: (value) {
                   if (value == "") {
-                    return "Campo obligatorio";
+                    return "Este campo es obligatorio";
                   }
+                  return null;
                 },
+
+              ),
+
+            ),
+            Padding(padding: EdgeInsets.fromLTRB(20, 10, 20, 20),
+              child: TextFormField(
+                controller: txtPrecioBoletosController,
                 keyboardType: TextInputType.number,
-                decoration: InputDecoration(
-                    labelText: "Precio del boleto",
-                    hintText: "Ingrese el precio de boleto para la rifa"),
-              ),
-              DateTimePicker(
-                type: DateTimePickerType.date,
-                dateMask: 'd MMM yyyy ',
-                controller: txtFechaInicioController,
-                firstDate: DateTime(2000),
-                lastDate: DateTime(2101),
-                icon: Icon(Icons.date_range),
-                dateLabelText: "Fecha de inicio",
-                onChanged: (val) {
-                  _startDate = DateTime.parse(val);
+                decoration: const InputDecoration(
+                    border: OutlineInputBorder(), hintText: "Precio del boleto"),
+                validator: (value) {
+                  if (value == "") {
+                    return "Este campo es obligatorio";
+                  }
+                  return null;
                 },
               ),
 
-              DateTimePicker(
-                type: DateTimePickerType.date,
-                dateMask: 'd MMM yyyy ',
-                controller: txtFechaTerminoController,
-                firstDate: DateTime(2001),
-                lastDate: DateTime(2101),
-                icon: Icon(Icons.date_range_sharp),
-                dateLabelText: "Fecha de Termino",
-                onChanged: (val) {
-                  _endDate = DateTime.parse(val);
-                },
-              ),
+            ),
 
-              Padding(
-                padding: EdgeInsets.all(20),
-                child: idDoc.isEmpty ? Container(): TextButton(
-                    onPressed: () async {
-                      if (idDoc.isNotEmpty) {
-                        bool confirm = await showDialog(
-                            context: context,
-                            builder: (BuildContext context) {
-                              return AlertDialog(
-                                title: Text("Confirmación"),
-                                content: Text(
-                                    "¿Estas seguro que deseas eliminar la rifa con nombre:  " + nombreController.text + "?"),
-                                actions: <Widget>[
-                                  TextButton(onPressed: () {
-                                    Navigator.of(context).pop(false);
-                                  },
-                                      child: Text("Cancelar")
-                                  ),
-                                  TextButton(onPressed: () {
-                                    Navigator.of(context).pop(true);
-                                  },
-                                      child: Text("Eliminar")
-                                  )
-                                ],
-                              );
-                            });
+            //Aqui Va el calendario
 
-                        if (confirm) {
-                          await rifas.doc(idDoc).delete();
-                          await boletos.doc(idDoc).delete();
-                          Navigator.pop(context);
-                        }
-                      }
-                    },
-                    child: Text("Eliminar")
-                ),
-              ),
+            DateTimePicker(
+              type: DateTimePickerType.date,
+              dateMask: 'd MMM, yyyy',
 
-            ],
-          ),
+              controller: fechaIController,
+              firstDate:DateTime(2000),
+              lastDate: DateTime(2101),
+              icon: Icon(Icons.event),
+              dateLabelText: 'Fecha de inicio', timeLabelText: 'Hora de inicio', onChanged: (val){
+              fechainicio = DateTime.parse(val);
+            },
+
+            ),
+            DateTimePicker(
+              type: DateTimePickerType.date,
+              dateMask: 'd MMM, yyyy',
+
+              controller: fechaFController,
+              firstDate:DateTime(2000),
+              lastDate: DateTime(2101),
+              icon: Icon(Icons.event),
+              dateLabelText: 'Fecha de incio',
+              timeLabelText: 'Hora de incio',
+              onChanged: (val){
+                fechafinal = DateTime.parse(val);
+              },
+
+            ),
+
+            _image == null
+                ? Text('No se ha seleccionado ninguna imagen')
+                : Image.file(_image!, height: 200.0),
+
+            ElevatedButton(
+              onPressed: () async {
+                await _getImageFromCamera();
+              },
+              child: Text('Elegir una foto'),
+            ),
+            Visibility(
+                visible: idDoc.isNotEmpty,
+                child: TextButton(
+                  onPressed: () async{
+                    await QuickAlert.show(
+                      context: context,
+                      type: QuickAlertType.confirm,
+                      title: '¿Seguro?',
+                      text: 'Desea eliminar el registro',
+                      confirmBtnText: 'yes',
+                      cancelBtnText: 'no',
+                      onConfirmBtnTap: () async{
+                        await rifas.doc(idDoc).delete();
+                        Navigator.pop(context);
+                      },
+                      confirmBtnColor: Colors.purple,
+                    );
+                  },
+                  style: ButtonStyle(
+                    foregroundColor:
+                    MaterialStateProperty.all<Color>(Colors.green),
+
+                  ),
+                  child: const Text(("Eliminar")),
+                ))
+
+
+          ],
         ),
+
+
       ),
+
+
+
       floatingActionButton: FloatingActionButton(
-        child: Icon(Icons.add),
         onPressed: () async {
-          var isValid = _form.currentState?.validate();
-          if (isValid == null || isValid == false) {
-            return;
-          } else {
-            Map<String, dynamic> rifaData = {
-              "nombre": nombreController.text,
-              "descripcion": descripcionController.text,
-              "numeroBoletos": int.tryParse(numeroBoletosController.text) ?? 0,
-              "precioBoleto": int.tryParse(precioBoletoController.text) ?? 0,
-              "fechaInicio": _startDate,
-              "fechaFin": _endDate
-            };
+          _storageReference = firebase_storage.FirebaseStorage.instance
+              .ref()
+              .child('carpeta_destino/${DateTime.now()}.png');
+          //Sube la imagen al buckquet
+          await _storageReference?.putFile(_image!);
 
+          //Obtiene la URL de descarga de la imagen
+          String? downloadURL = await _storageReference?.getDownloadURL();
+          print(downloadURL);
 
+          Map<String, dynamic> rifaData = {
+            'nombre': txtNameController.text,
+            'descripcion': txtDescriptionController.text,
+            'numeroBoletos': int.tryParse(txtNumberBoletosController.text) ?? 0,
+            'precioBoletos': int.tryParse(txtPrecioBoletosController.text) ?? 0,
+            'fechaInicio': fechainicio,
+            'fechaFin': fechafinal,
+            'urlImagen':downloadURL.toString(),
 
-            if (idDoc.isEmpty) {
-              var nuevaRifa = await rifas.add(rifaData);
+          };
+          print('guardando');
+          if (idDoc.isEmpty) {
+            var nuevaRifa = await rifas.add(rifaData);
 
-              //String idRifa = idDoc;
-              int cantidadBoletos = int.parse(numeroBoletosController.text);
+            //String idRifa = idDoc;
+            int cantidadBoletos = int.parse(txtNumberBoletosController.text);
 
-              for(int i = 0; i < cantidadBoletos; i++){
-                boletos.add({
-                  "idRifa": nuevaRifa.id,
-                  "numeroBoleto": i +1,
-                  "reservado": false
-                });
-              }
-
-            } else {
-              await rifas.doc(idDoc).update(rifaData);
+            for(int i = 0; i < cantidadBoletos; i++){
+              boletos.add({
+                "idRifa": nuevaRifa.id,
+                "numeroBoleto": i +1,
+                "reservado": false
+              });
             }
-            Navigator.pop(context);
+
+          } else {
+            await rifas.doc(idDoc).update(rifaData);
           }
+
+          Navigator.pop(context);
+          return;
         },
+        child: Icon(Icons.save_rounded),
       ),
+
+
     );
+
   }
+
 }

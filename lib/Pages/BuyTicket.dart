@@ -2,38 +2,32 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 
-class BuyTicket extends StatefulWidget {
+class BuyTickets extends StatefulWidget {
   final String idDoc;
   final int ticketNumber;
 
-  const BuyTicket({required this.idDoc, required this.ticketNumber});
+  const BuyTickets({required this.idDoc, required this.ticketNumber});
 
   @override
-  State<BuyTicket> createState() => _BuyTicketState();
+  _BuyTicketsState createState() => _BuyTicketsState();
 }
 
-class _BuyTicketState extends State<BuyTicket> {
-  final TextEditingController nameController = TextEditingController();
-  final TextEditingController phoneNumberController = TextEditingController();
+class _BuyTicketsState extends State<BuyTickets> {
+
+  final TextEditingController nombreController = TextEditingController();
+  final TextEditingController telefonoController = TextEditingController();
 
   void _updateDocument() async {
-    String name = nameController.text;
-    String phoneNumber = phoneNumberController.text;
+    String name = nombreController.text;
+    String phoneNumber = telefonoController.text;
 
-    await FirebaseFirestore.instance
-        .collection("boletos")
-        .doc(widget.idDoc)
-        .set(
-      {
-        'comprador': name,
-        'telefonoComprador': phoneNumber,
-        'reservado': true,
-      },
-      SetOptions(merge: true),
-    );
+    await FirebaseFirestore.instance.collection('boletos').doc(widget.idDoc).set({
+      'comprador':name,
+      'telefono_comprador':phoneNumber,
+      'reservado': true,},
+      SetOptions(merge: true),);
     Navigator.pop(context);
   }
-
   final _form = GlobalKey<FormState>();
 
   @override
@@ -49,7 +43,7 @@ class _BuyTicketState extends State<BuyTicket> {
             child: Column(
               children: [
                 TextFormField(
-                  controller: nameController,
+                  controller: nombreController,
                   validator: (value) {
                     if (value == "") {
                       return "campo obligatorio";
@@ -60,7 +54,7 @@ class _BuyTicketState extends State<BuyTicket> {
                       hintText: "Ingrese su nombre"),
                 ),
                 TextFormField(
-                  controller: phoneNumberController,
+                  controller: telefonoController,
                   validator: (value) {
                     if (value == "") {
                       return "Campo Obligatorio";

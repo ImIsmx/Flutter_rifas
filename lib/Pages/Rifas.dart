@@ -1,52 +1,69 @@
-import 'package:app/Pages/AddRifa.dart';
-import 'package:app/Pages/BoletosRifa.dart';
+import 'package:app/Pages/Home.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-class RifaPage extends StatefulWidget {
-  const RifaPage({Key? key}) : super(key: key);
+import 'AddRifa.dart';
+import 'BoletosRifa.dart';
+import 'Login.dart';
+
+class Rifas extends StatefulWidget {
+  const Rifas({Key? key}) : super(key: key);
+
 
   @override
-  State<RifaPage> createState() => _RifaPageState();
+  State<Rifas> createState() => _RifaState();
+
 }
 
-class _RifaPageState extends State<RifaPage> {
+class _RifaState extends State<Rifas> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Nuestras Rifas"),
+        title: Text("¡Rifas disponibles!"),
       ),
 
       body: StreamBuilder(
-        stream: FirebaseFirestore.instance.collection("rifas").snapshots(),
-        builder: (context, AsyncSnapshot<QuerySnapshot> snapshot){
-          if(!snapshot.hasData){
+        stream: FirebaseFirestore.instance.collection('rifas').snapshots(),
+        builder: (context, AsyncSnapshot<QuerySnapshot>snapshot){//
+
+          if(!snapshot.hasData){//si no contiene datos solamente nos regresara un circulo cargando
             return CircularProgressIndicator();
           }
-
           List<DocumentSnapshot> docs = snapshot.data!.docs;
+
+
           return ListView.builder(
               itemCount: docs.length,
-              itemBuilder: (context, index){
-
+              itemBuilder: (context,index) {
                 final DocumentSnapshot rifa = docs[index];
+                return ListTile(
+                  //leading: const Icon(Icons.shopping_bag),
+                  leading: Image.network(rifa['urlImagen']),
+                  title: Text(rifa['nombre']),
+                  subtitle: Text(rifa['descripcion']),
 
-                return Card(
-                  child: ListTile(
-                    leading: Icon(Icons.shop),
-                    title: Text(rifa['nombre'], style: TextStyle(fontSize: 18 ),),
-                    subtitle: Text(rifa['descripcion']),
+                  onTap: (){
+                    print("hola" + rifa['nombre']);
 
-                    onTap: (){
-                      print("hola" + rifa['nombre']);
-                      Navigator.push(context, MaterialPageRoute(builder: (context)=> BoletosRifa(idDoc: rifa.id,)),);
+                    Navigator.push(context, MaterialPageRoute(builder: (context) => BoletosRifa(idDoc: rifa.id,)),);
 
-                    },
-                  ),
+                  },
                 );
               }
           );
         },
+
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: (){
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => LoginPage()),
+          );
+        },
+        child: Icon(Icons.person),
+
+
       ),
     );
   }

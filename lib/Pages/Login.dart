@@ -1,8 +1,8 @@
-
-import 'package:app/Pages/Home.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:quickalert/quickalert.dart';
+
+import 'Home.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
@@ -12,8 +12,9 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  final _form = GlobalKey<FormState>();
   final FirebaseAuth _auth = FirebaseAuth.instance;
+
+  final _form = GlobalKey<FormState>();
   final txtUserController = TextEditingController();
   final txtPasswordController = TextEditingController();
 
@@ -23,16 +24,15 @@ class _LoginPageState extends State<LoginPage> {
           email: txtUserController.text, password: txtPasswordController.text);
 
       Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context)  => HomePage())
+        context,
+        MaterialPageRoute(builder: (context) => Home()),
       );
-
     } catch (e) {
       QuickAlert.show(
         context: context,
         type: QuickAlertType.error,
         title: 'Oops...',
-        text: 'Sorry, something went wrong',
+        text: 'Acceso no valido..',
       );
     }
   }
@@ -40,60 +40,65 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text("Login"),
-      ),
-      body: Form(
-        key: _form,
-        child: Column(
-          children: [
-            Image.network(
-              "https://i.pinimg.com/736x/98/8d/ed/988ded77be6eb979a543696750d7986b.jpg",
-              width: 280,
-            ),
-            Padding(
-              padding: EdgeInsets.all(20),
-              child: TextFormField(
-                controller: txtUserController,
-                decoration: InputDecoration(
-                    border: OutlineInputBorder(), hintText: "Usuario"),
-                validator: (value) {
-                  if (value == "") {
-                    return "Este campo es obligatorio";
-                  }
-                },
+        appBar: AppBar(
+          title: Text("Inicio de sesion"),
+        ),
+        body: Form(
+          key: _form,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Image.network(
+                "https://assets.stickpng.com/thumbs/585e4bf3cb11b227491c339a.png",
+                width: 180,
               ),
-            ),
-            Padding(
-              padding: EdgeInsets.all(20),
-              child: TextFormField(
+              Padding(
+                padding: EdgeInsets.fromLTRB(20, 10, 20, 20),
+                child: TextFormField(
+                  controller: txtUserController,
+                  decoration: const InputDecoration(
+                      border: OutlineInputBorder(), hintText: "Usuario"),
+                  validator: (value) {
+                    if (value == "") {
+                      return "Este campo es obligatorio";
+                    }
+                    return null;
+                  },
+                ),
+              ),
+              Padding(
+                padding: EdgeInsets.fromLTRB(20, 10, 20, 20),
+                child: TextFormField(
+
                   controller: txtPasswordController,
-                  obscureText: true,
-                  decoration: InputDecoration(
+                  decoration: const InputDecoration(
                       border: OutlineInputBorder(), hintText: "Contraseña"),
                   validator: (value) {
                     if (value == "") {
                       return "Este campo es obligatorio";
                     }
-                  }),
-            ),
-            TextButton(
-              onPressed: () {
-                var IsValid = _form.currentState?.validate();
-
-                if (IsValid == null || IsValid == false) {
-                  return;
-                }
-                _login();
-              },
-              style: ButtonStyle(
-                foregroundColor: MaterialStateProperty.all<Color>(Colors.blue),
+                    return null;
+                  },
+                ),
               ),
-              child: const Text("Acceder"),
-            )
-          ],
-        ),
-      ),
-    );
+
+              TextButton(
+                onPressed: () {
+                  var isValid = _form.currentState?.validate();
+                  if (isValid == null || isValid == false) {
+                    //funcion si no de lo contrario hace la funcion de login
+                    return;
+                  }
+                  _login();
+                },
+                style: ButtonStyle(
+                  foregroundColor: MaterialStateProperty.all<Color>(Colors.amber ),
+                ),
+                child: const Text("Accesar"),
+              )
+
+            ],
+          ),
+        ));
   }
 }
